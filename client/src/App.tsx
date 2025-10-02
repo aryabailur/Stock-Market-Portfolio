@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
-import ProtectedRoute from "./components/ProtectedRoutes"; // <-- Import the new component
+import HomePage from "./pages/HomePage";
+import ProtectedRoute from "./components/ProtectedRoutes";
 import "./App.css";
 
 function App() {
@@ -15,8 +16,9 @@ function App() {
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<HomePage />} />       {/* Home is now protected */}
           <Route path="/dashboard" element={<DashboardPage />} />
-          {/* You can add more protected routes here later */}
+          {/* You can add more protected routes here */}
         </Route>
       </Routes>
     </BrowserRouter>
@@ -24,3 +26,4 @@ function App() {
 }
 
 export default App;
+
