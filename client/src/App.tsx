@@ -1,24 +1,32 @@
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
-import HomePage from "./pages/HomePage";
+import LoginPage from "./Pages/LoginPage";
+import RegisterPage from "./Pages/RegisterPage";
+import DashboardPage from "./Pages/DashboardPage";
+import HomePage from "./Pages/HomePage";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import "./App.css";
 
-function App() {
+// Define the component type as a React Functional Component (FC)
+const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
+        {/* // Public Routes 
+          These routes are accessible to all users (authenticated or not).
+          HomePage is now unprotected.
+        */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
-        {/* Protected Routes */}
+        
+        {/* // Protected Routes 
+          These routes are nested inside the ProtectedRoute component, 
+          which handles authentication checks (e.g., redirecting unauthenticated users).
+        */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<HomePage />} />       {/* Home is now protected */}
           <Route path="/dashboard" element={<DashboardPage />} />
-          {/* You can add more protected routes here */}
+          {/* Add more protected routes here */}
         </Route>
       </Routes>
     </BrowserRouter>
@@ -26,4 +34,3 @@ function App() {
 }
 
 export default App;
-
