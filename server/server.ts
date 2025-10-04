@@ -1,18 +1,13 @@
-
-import express, { Request, Response } from 'express';
-
+import express from "express";
+import router from "./routes/authRouter";
 
 const app = express();
+const port = 5000;
 
+// This line is needed to parse JSON request bodies
+app.use(express.json());
+app.use("/api/auth", router);
 
-const PORT = process.env.PORT || 3000;
-
-
-app.get('/', (req: Request, res: Response) => {
-  res.send(' This is a basic Express server in TypeScript.');
-});
-
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`listening to port: ${port}`);
 });
