@@ -1,36 +1,43 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-export async function checkBearer(
-  req: Request,
+interface UserPayload {
+  id: string;
+  role: string;
+}
+
+export interface AuthRequest extends Request {
+  user?: UserPayload;
+}
+
+export const authMiddleware = (
+  req: AuthRequest,
   res: Response,
   next: NextFunction
-) {
+) => {
   try {
-    const head = req.headers["Authorization"];
-    if (!head) {
-      return res.status(401).json({ message: "Unauthorized error" });
+    let authHeader = req.headers.authorization;
+
+    if (Array.isArray(authHeader)) {
+      authHeader = authHeader[0];
     }
-    const isBearer = head.startsWith("Bearer");
-    if (!isBearer) {
-      return res.status(401).json({ message: "Unauthorized error" });
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Unauthorized: No token provided or malformed header",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decodedPayload = jwt.verify(token, process.env.JWT_SECRET as string);
+
+    if (typeof decodedPayload === "object" && decodedPayload !== null) {
+      req.user = decodedPayload as UserPayload;
+      next();
     } else {
-      const authorizationArray = head.split(" ");
-      const token = authorizationArray[1];
-      const secretKey = process.env.JWT_SECRET as string;
-      try {
-        const decodedPayload = jwt.verify(token, secretKey);
-        if (typeof decodedPayload == "object") {
-          req.user = decodedPayload as { id: string; role: string };
-          next();
-        }
-      } catch (Error) {
-        console.log("error in jwt verification", Error);
-        throw Error;
-      }
+      throw new Error("Invalid token payload");
     }
-  } catch (Error) {
-    console.log("error", Error);
-    res.status(401).json({ message: "error in middleware" });
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
-}
+};
