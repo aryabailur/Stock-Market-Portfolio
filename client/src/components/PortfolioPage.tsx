@@ -3,11 +3,19 @@ import React from "react";
 interface Investment {
   id: number;
   symbol: string;
-  quantity: number;
-  purchase_price: number;
+  quantity: number | string;
+  purchase_price: number | string;
+  current_price?: number;
+  current_value?: number;
+  profit_loss?: number;
 }
 
-const PortfolioTable = ({ investments }: { investments: Investment[] }) => {
+interface PortfolioTableProps {
+  investments: Investment[];
+  onRowClick: (symbol: string) => void;
+}
+
+const PortfolioTable = ({ investments, onRowClick }: PortfolioTableProps) => {
   return (
     <table className="portfolio-table">
       <thead>
@@ -19,10 +27,14 @@ const PortfolioTable = ({ investments }: { investments: Investment[] }) => {
       </thead>
       <tbody>
         {investments.map((investment) => (
-          <tr key={investment.id}>
+          <tr
+            key={investment.id}
+            onClick={() => onRowClick(investment.symbol)}
+            style={{ cursor: "pointer" }}
+          >
             <td>{investment.symbol}</td>
-            <td>{investment.quantity}</td>
-            <td>${investment.purchase_price.toFixed(2)}</td>
+            <td>{parseFloat(String(investment.quantity)).toFixed(2)}</td>
+            <td>${parseFloat(String(investment.purchase_price)).toFixed(2)}</td>
           </tr>
         ))}
       </tbody>

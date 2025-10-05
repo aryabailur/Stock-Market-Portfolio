@@ -1,7 +1,12 @@
 import db from "../db_config.js";
 export async function createUser(user) {
     try {
-        const [newUser] = await db("login").insert(user).returning("*");
+        const userData = {
+            email: user.email,
+            password_hash: user.password_hash,
+            username: user.username || user.email.split("@")[0],
+        };
+        const [newUser] = await db("login").insert(userData).returning("*");
         return newUser;
     }
     catch (dbError) {

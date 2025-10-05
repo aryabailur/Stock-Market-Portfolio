@@ -5,7 +5,7 @@ import { Request, Response } from "express";
 
 export async function register(req: Request, res: Response) {
   try {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
     if (!email || !password) {
       return res
         .status(400)
@@ -18,7 +18,11 @@ export async function register(req: Request, res: Response) {
       });
     } else {
       const password_hash = await bcrypt.hash(req.body.password, 10);
-      const newUser = await createUser({ email, password_hash });
+      const newUser = await createUser({
+        email,
+        password_hash,
+        username: username || email.split("@")[0],
+      });
       const payload = {
         id: newUser.id,
         email: newUser.email,
@@ -28,8 +32,8 @@ export async function register(req: Request, res: Response) {
       res.status(201).json({ token });
     }
   } catch (error) {
-    console.log("eror", error);
-    res.status(500).json({ message: "error in registeration" });
+    console.log("error", error);
+    res.status(500).json({ message: "error in registration" });
   }
 }
 

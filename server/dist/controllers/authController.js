@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 export async function register(req, res) {
     try {
-        const { email, password } = req.body;
+        const { email, password, username } = req.body;
         if (!email || !password) {
             return res
                 .status(400)
@@ -17,7 +17,11 @@ export async function register(req, res) {
         }
         else {
             const password_hash = await bcrypt.hash(req.body.password, 10);
-            const newUser = await createUser({ email, password_hash });
+            const newUser = await createUser({
+                email,
+                password_hash,
+                username: username || email.split("@")[0],
+            });
             const payload = {
                 id: newUser.id,
                 email: newUser.email,
@@ -28,8 +32,8 @@ export async function register(req, res) {
         }
     }
     catch (error) {
-        console.log("eror", error);
-        res.status(500).json({ message: "error in registeration" });
+        console.log("error", error);
+        res.status(500).json({ message: "error in registration" });
     }
 }
 export async function login(req, res) {

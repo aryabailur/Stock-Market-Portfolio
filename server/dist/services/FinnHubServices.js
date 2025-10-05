@@ -12,3 +12,14 @@ export const getStockCandles = async (symbol, resolution, from, to) => {
         throw new Error("Failed to fetch stock data from provider.");
     }
 };
+export const getQuote = async (symbol) => {
+    try {
+        const url = `${BASE_URL}/quote?symbol=${symbol}&token=${API_KEY}`;
+        const response = await axios.get(url);
+        return response.data; // Returns { c: current_price, ... }
+    }
+    catch (error) {
+        console.error(`Error fetching quote for ${symbol} from Finnhub:`, error);
+        throw new Error("Failed to fetch quote from provider.");
+    }
+};

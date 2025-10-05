@@ -7,10 +7,28 @@ interface Investment {
   user_id: number;
 }
 
-export const getInvestmentsByUserId = (userId: number) => {
-  return db("investments").where({ user_id: userId }).select("*");
+export const getInvestmentsByUserId = async (userId: number) => {
+  const investments = await db("investments")
+    .where({ user_id: userId })
+    .select("*");
+
+  // Convert string values from database to numbers
+  return investments.map((inv) => ({
+    ...inv,
+    quantity: parseFloat(inv.quantity),
+    purchase_price: parseFloat(inv.purchase_price),
+  }));
 };
 
-export const addInvestment = (investment: Investment) => {
-  return db("investments").insert(investment).returning("*");
+export const addInvestment = async (investment: Investment) => {
+  const [newInvestment] = await db("investments")
+    .insert(investment)
+    .returning("*");
+
+  // Convert string values to numbers
+  return {
+    ...newInvestment,
+    quantity: parseFloat(newInvestment.quantity),
+    purchase_price: parseFloat(newInvestment.purchase_price),
+  };
 };
