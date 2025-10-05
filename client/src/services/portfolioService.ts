@@ -20,10 +20,6 @@ export const getPortfolioData = async () => {
   return response.data;
 };
 
-/**
- * Adds a new investment for the logged-in user.
- * @param investmentData - The details of the investment to add.
- */
 export const addPortfolioInvestment = async (
   investmentData: NewInvestmentData
 ) => {
@@ -31,4 +27,17 @@ export const addPortfolioInvestment = async (
     headers: getAuthHeaders(),
   });
   return response.data;
+};
+
+// New function to get current prices for a symbol
+export const getCurrentPrice = async (symbol: string) => {
+  try {
+    const response = await axios.get(`/api/stocks/quote/${symbol}`, {
+      headers: getAuthHeaders(),
+    });
+    return response.data.c || 0; // Returns current price
+  } catch (error) {
+    console.error(`Error fetching price for ${symbol}:`, error);
+    return 0;
+  }
 };

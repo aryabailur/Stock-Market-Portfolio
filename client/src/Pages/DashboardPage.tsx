@@ -6,8 +6,9 @@ import StockChart from "../components/StockChart";
 import {
   getPortfolioData,
   addPortfolioInvestment,
+  getCurrentPrice,
 } from "../services/portfolioService";
-import { getStockHistory } from "../services/stockService"; // You'll need to create this
+import { getStockHistory } from "../services/stockService";
 import "./DashboardPage.css";
 
 interface Investment {
@@ -15,6 +16,7 @@ interface Investment {
   symbol: string;
   quantity: number;
   purchase_price: number;
+  current_price?: number;
 }
 
 interface ChartData {
@@ -32,15 +34,38 @@ const DashboardPage = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>("");
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
+  const [loadingPortfolio, setLoadingPortfolio] = useState(true);
   const navigate = useNavigate();
 
   const fetchPortfolio = async () => {
     try {
-      const data = await getPortfolioData();
-      setInvestments(data);
+      setLoadingPortfolio(true);
+      const data: Investment[] = await getPortfolioData();
+
+      const symbols: string[] = [...new Set(data.map((inv) => inv.symbol))];
+      const pricePromises = symbols.map((symbol) => getCurrentPrice(symbol));
+      const prices = await Promise.all(pricePromises);
+
+      const priceMap: Record<string, number> = symbols.reduce(
+        (acc, symbol, index) => {
+          acc[symbol] = prices[index];
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
+      const enrichedData = data.map((inv) => ({
+        ...inv,
+        current_price: priceMap[inv.symbol] || 0,
+      }));
+
+      setInvestments(enrichedData);
+      setError("");
     } catch (err) {
       setError("Failed to fetch portfolio data. Please try again later.");
       console.error(err);
+    } finally {
+      setLoadingPortfolio(false);
     }
   };
 
@@ -56,6 +81,7 @@ const DashboardPage = () => {
     try {
       await addPortfolioInvestment(newInvestment);
       fetchPortfolio();
+      setError("");
     } catch (err) {
       setError("Failed to add investment.");
       console.error(err);
@@ -71,7 +97,7 @@ const DashboardPage = () => {
       const data = await getStockHistory(symbol);
       setChartData(data);
     } catch (err) {
-      setError(`Failed to load chart for ${symbol}`);
+      setError(`Unable to load chart data for ${symbol}`);
       console.error(err);
     } finally {
       setLoadingChart(false);
@@ -83,35 +109,100 @@ const DashboardPage = () => {
     navigate("/login");
   };
 
+  // Calculate portfolio summary
+  const portfolioSummary = investments.reduce(
+    (acc, inv) => {
+      const quantity = Number(inv.quantity);
+      const purchasePrice = Number(inv.purchase_price);
+      const currentPrice = inv.current_price || 0;
+
+      const invested = quantity * purchasePrice;
+      const currentValue =
+        currentPrice > 0 ? quantity * currentPrice : invested;
+
+      acc.totalInvested += invested;
+      acc.currentValue += currentValue;
+
+      return acc;
+    },
+    { totalInvested: 0, currentValue: 0 }
+  );
+
+  const totalGainLoss =
+    portfolioSummary.currentValue - portfolioSummary.totalInvested;
+  const totalGainLossPercent =
+    portfolioSummary.totalInvested > 0
+      ? (totalGainLoss / portfolioSummary.totalInvested) * 100
+      : 0;
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Your Portfolio Dashboard</h1>
+        <h1 className="dashboard-title">Portfolio Dashboard</h1>
         <button onClick={handleLogout} className="logout-button">
           Logout
         </button>
       </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && (
+        <div className="error-message">
+          <span>⚠</span> {error}
+        </div>
+      )}
+
+      {/* Portfolio Summary Cards */}
+      <div className="summary-cards">
+        <div className="summary-card">
+          <div className="summary-label">Total Invested</div>
+          <div className="summary-value">
+            ${portfolioSummary.totalInvested.toFixed(2)}
+          </div>
+        </div>
+        <div className="summary-card">
+          <div className="summary-label">Current Value</div>
+          <div className="summary-value">
+            ${portfolioSummary.currentValue.toFixed(2)}
+          </div>
+        </div>
+        <div className="summary-card">
+          <div className="summary-label">Total Gain/Loss</div>
+          <div
+            className={`summary-value ${
+              totalGainLoss >= 0 ? "positive" : "negative"
+            }`}
+          >
+            {totalGainLoss >= 0 ? "+" : ""}${totalGainLoss.toFixed(2)}
+            <span className="summary-percent">
+              ({totalGainLossPercent >= 0 ? "+" : ""}
+              {totalGainLossPercent.toFixed(2)}%)
+            </span>
+          </div>
+        </div>
+      </div>
 
       <div className="card">
         <AddInvestmentForm onAddInvestment={handleAddInvestment} />
       </div>
 
       <div className="card">
-        <PortfolioTable investments={investments} onRowClick={handleRowClick} />
+        {loadingPortfolio ? (
+          <div className="loading-state">Loading portfolio...</div>
+        ) : (
+          <PortfolioTable
+            investments={investments}
+            onRowClick={handleRowClick}
+          />
+        )}
       </div>
 
       {loadingChart && (
-        <div className="card">
-          <p>Loading chart...</p>
+        <div className="card loading-state">
+          Loading chart for {selectedSymbol}...
         </div>
       )}
 
       {chartData && !loadingChart && (
-        <div className="card">
-          <StockChart data={chartData} symbol={selectedSymbol} />
-        </div>
+        <StockChart data={chartData} symbol={selectedSymbol} />
       )}
     </div>
   );
