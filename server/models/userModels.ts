@@ -5,7 +5,7 @@ export async function createUser(user: {
   password_hash: string;
 }) {
   try {
-    const [newUser] = await db("users").insert(user).returning("*");
+    const [newUser] = await db("login").insert(user).returning("*");
     return newUser;
   } catch (dbError) {
     console.log("db insertion error", dbError);
@@ -15,7 +15,7 @@ export async function createUser(user: {
 
 export async function findUserByEmail(email: string) {
   try {
-    const userData = await db("users")
+    const userData = await db("login")
       .where("email", "=", email)
       .select("email", "password_hash")
       .first();
