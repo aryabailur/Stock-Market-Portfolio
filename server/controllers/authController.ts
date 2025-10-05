@@ -1,4 +1,4 @@
-import { createUser, findUserByEmail } from "../models/userModels.ts";
+import { createUser, findUserByEmail } from "../models/userModels.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
@@ -20,6 +20,7 @@ export async function register(req: Request, res: Response) {
       const password_hash = await bcrypt.hash(req.body.password, 10);
       const newUser = await createUser({ email, password_hash });
       const payload = {
+        id: newUser.id,
         email: newUser.email,
       };
       const secretKey = process.env.JWT_SECRET as string;
@@ -33,13 +34,24 @@ export async function register(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
+  console.log("==================");
+  console.log("LOGIN FUNCTION CALLED");
+  console.log("==================");
+
   try {
     const email = req.body.email;
     const password = req.body.password;
+
+    console.log("📧 Email:", email);
+
     if (!email || !password) {
       return res.status(401).json({ message: "missing email or password" });
     }
     const user = await findUserByEmail(email);
+
+    console.log("👤 User found:", user);
+    console.log("👤 User ID:", user?.id);
+
     if (!user) {
       return res.status(401).json({ message: "invalid email or password" });
     }
@@ -47,8 +59,14 @@ export async function login(req: Request, res: Response) {
       const payload = {
         id: user.id,
       };
+
+      console.log("📦 Payload being signed:", payload);
+
       const secretKey = process.env.JWT_SECRET as string;
       const token = jwt.sign(payload, secretKey, { expiresIn: "7d" });
+
+      console.log("✅ Token created successfully");
+
       res.status(200).json({ message: "login successfull", token });
     } else {
       res.status(401).json({ message: "invalid email or password" });

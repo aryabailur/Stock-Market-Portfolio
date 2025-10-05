@@ -1,4 +1,9 @@
 {
+  "name": "server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "server.ts",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -9,7 +14,8 @@
     "pg": "^8.16.3"
   },
   "scripts": {
-    "dev": "nodemon --exec ts-node --esm server.ts"
+    "build": "tsc --watch",
+    "dev": "nodemon dist/server.js"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

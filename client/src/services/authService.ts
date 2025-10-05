@@ -1,15 +1,19 @@
-// client/src/services/authService.ts
 import axios from "axios";
 
-// The base URL of your backend API
-const API_URL = "http://localhost:5000/api/auth"; // Make sure the port matches your server's port
+const API_URL = "http://localhost:5000/api/auth";
 
-export const registerUser = async (email: string, password: string) => {
+// Add "username: string" as the first parameter
+export const registerUser = async (
+  username: string,
+  email: string,
+  password: string
+) => {
   const response = await axios.post(`${API_URL}/register`, {
+    username, // Now this variable exists in the function's scope
     email,
     password,
   });
-  return response.data; // This will return the { token } object
+  return response.data;
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -17,5 +21,5 @@ export const loginUser = async (email: string, password: string) => {
     email,
     password,
   });
-  return response.data; // This will return the { token } object
+  return response.data;
 };

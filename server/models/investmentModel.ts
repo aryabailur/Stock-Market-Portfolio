@@ -1,4 +1,4 @@
-import db from "../db_config";
+import db from "../db_config.js";
 
 interface Investment {
   symbol: string;

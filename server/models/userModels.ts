@@ -17,7 +17,7 @@ export async function findUserByEmail(email: string) {
   try {
     const userData = await db("login")
       .where("email", "=", email)
-      .select("email", "password_hash")
+      .select("id", "email", "password_hash")
       .first();
     return userData;
   } catch (dbError) {
