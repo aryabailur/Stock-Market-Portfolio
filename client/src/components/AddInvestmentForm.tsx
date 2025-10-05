@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 interface AddInvestmentFormProps {
   onAddInvestment: (investment: {
@@ -8,33 +9,75 @@ interface AddInvestmentFormProps {
   }) => void;
 }
 
-const AddInvestmentForm = ({ onAddInvestment }: AddInvestmentFormProps) => {
+const AddInvestmentForm: React.FC<AddInvestmentFormProps> = ({
+  onAddInvestment,
+}) => {
   const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [price, setPrice] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  const fetchCurrentPrice = async (sym: string) => {
+    if (!sym || sym.length < 1) return;
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `/api/stocks/quote/${sym.toUpperCase()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const currentPrice = response.data.c;
+      if (currentPrice) {
+        setPurchasePrice(currentPrice.toFixed(2));
+      }
+    } catch (error) {
+      console.error("Error fetching price:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    setSymbol(value);
+  };
+
+  const handleSymbolBlur = () => {
+    if (symbol) {
+      fetchCurrentPrice(symbol);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!symbol || !quantity || !purchasePrice) return;
+
     onAddInvestment({
       symbol: symbol.toUpperCase(),
-      quantity: Number(quantity),
-      purchase_price: Number(price),
+      quantity: parseFloat(quantity),
+      purchase_price: parseFloat(purchasePrice),
     });
+
     setSymbol("");
     setQuantity("");
-    setPrice("");
+    setPurchasePrice("");
   };
 
   return (
     <form onSubmit={handleSubmit} className="add-investment-form">
-      <h3>Add New Investment</h3>
       <div className="form-group">
         <label>Symbol</label>
         <input
           type="text"
           placeholder="e.g., AAPL"
           value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
+          onChange={handleSymbolChange}
+          onBlur={handleSymbolBlur}
           required
         />
       </div>
@@ -42,10 +85,10 @@ const AddInvestmentForm = ({ onAddInvestment }: AddInvestmentFormProps) => {
         <label>Quantity</label>
         <input
           type="number"
-          step="any"
           placeholder="0"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
+          step="0.01"
           required
         />
       </div>
@@ -53,12 +96,18 @@ const AddInvestmentForm = ({ onAddInvestment }: AddInvestmentFormProps) => {
         <label>Purchase Price</label>
         <input
           type="number"
-          step="any"
           placeholder="0.00"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          value={purchasePrice}
+          onChange={(e) => setPurchasePrice(e.target.value)}
+          step="0.01"
           required
+          disabled={loading}
         />
+        {loading && (
+          <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+            Fetching...
+          </span>
+        )}
       </div>
       <button type="submit">Add</button>
     </form>

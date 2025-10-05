@@ -7,6 +7,7 @@ import {
   getPortfolioData,
   addPortfolioInvestment,
   getCurrentPrice,
+  deletePortfolioInvestment,
 } from "../services/portfolioService";
 import { getStockHistory } from "../services/stockService";
 import "./DashboardPage.css";
@@ -84,6 +85,21 @@ const DashboardPage = () => {
       setError("");
     } catch (err) {
       setError("Failed to add investment.");
+      console.error(err);
+    }
+  };
+  const handleDeleteInvestment = async (id: number) => {
+    // Remove this line:
+    // if (!window.confirm("Are you sure you want to delete this investment?")) {
+    //   return;
+    // }
+
+    try {
+      await deletePortfolioInvestment(id);
+      fetchPortfolio();
+      setError("");
+    } catch (err) {
+      setError("Failed to delete investment.");
       console.error(err);
     }
   };
@@ -191,6 +207,7 @@ const DashboardPage = () => {
           <PortfolioTable
             investments={investments}
             onRowClick={handleRowClick}
+            onDelete={handleDeleteInvestment}
           />
         )}
       </div>

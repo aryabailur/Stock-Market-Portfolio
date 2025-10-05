@@ -11,13 +11,23 @@ export const getInvestmentsByUserId = async (userId) => {
     }));
 };
 export const addInvestment = async (investment) => {
-    const [newInvestment] = await db("investments")
+    const newInvestment = await db("investments")
         .insert(investment)
         .returning("*");
-    // Convert string values to numbers
-    return {
-        ...newInvestment,
-        quantity: parseFloat(newInvestment.quantity),
-        purchase_price: parseFloat(newInvestment.purchase_price),
-    };
+    // Return as array (controller uses array destructuring)
+    return newInvestment.map((inv) => ({
+        ...inv,
+        quantity: parseFloat(inv.quantity),
+        purchase_price: parseFloat(inv.purchase_price),
+    }));
+};
+// Add this new function
+export const deleteInvestmentById = async (investmentId, userId) => {
+    const result = await db("investments")
+        .where({ id: investmentId, user_id: userId })
+        .del();
+    if (result === 0) {
+        throw new Error("Investment not found or unauthorized");
+    }
+    return result;
 };

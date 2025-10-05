@@ -4,6 +4,7 @@ import { Response } from "express";
 import {
   getInvestmentsByUserId,
   addInvestment,
+  deleteInvestmentById, // Add this import
 } from "../models/investmentModel.js";
 
 export const getPortfolio = async (req: AuthRequest, res: Response) => {
@@ -20,11 +21,8 @@ export const getPortfolio = async (req: AuthRequest, res: Response) => {
         const quote = await getQuote(investment.symbol);
         const current_price = quote.c;
 
-        // --- FIX IS HERE ---
-        // Convert database strings to numbers before calculating
         const quantity = parseFloat(investment.quantity);
         const purchase_price = parseFloat(investment.purchase_price);
-        // -----------------
 
         const purchase_value = quantity * purchase_price;
         const current_value = quantity * current_price;
@@ -44,6 +42,7 @@ export const getPortfolio = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: "Error fetching portfolio", error });
   }
 };
+
 export const addInvestmentToPortfolio = async (
   req: AuthRequest,
   res: Response
@@ -85,5 +84,26 @@ export const addInvestmentToPortfolio = async (
     res.status(201).json(createdInvestment);
   } catch (error) {
     res.status(500).json({ message: "Error adding investment", error });
+  }
+};
+
+// Add this new function
+export const deleteInvestment = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const investmentId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.user.id, 10);
+
+    if (isNaN(investmentId)) {
+      return res.status(400).json({ message: "Invalid investment ID" });
+    }
+
+    await deleteInvestmentById(investmentId, userId);
+    res.status(200).json({ message: "Investment deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting investment", error });
   }
 };

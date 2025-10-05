@@ -1,8 +1,12 @@
 import axios from "axios";
 
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
-const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || "demo"; // Free demo key
+const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || "demo";
 const BASE_URL = "https://finnhub.io/api/v1";
+
+// Cache for storing price data
+const priceCache = new Map<string, { price: number; timestamp: number }>();
+const CACHE_DURATION = 60000; // 1 minute in milliseconds
 
 export const getStockCandles = async (
   symbol: string,
@@ -11,7 +15,6 @@ export const getStockCandles = async (
   to: number
 ) => {
   try {
-    // Using Alpha Vantage for historical data (it's free!)
     const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
 
     console.log("Fetching from Alpha Vantage for symbol:", symbol);
@@ -24,7 +27,7 @@ export const getStockCandles = async (
     }
 
     // Convert Alpha Vantage format to FinnHub format
-    const dates = Object.keys(timeSeries).sort().slice(-365); // Last year
+    const dates = Object.keys(timeSeries).sort().slice(-365);
     const candles = {
       c: dates.map((date) => parseFloat(timeSeries[date]["4. close"])),
       h: dates.map((date) => parseFloat(timeSeries[date]["2. high"])),
@@ -46,12 +49,45 @@ export const getStockCandles = async (
 };
 
 export const getQuote = async (symbol: string) => {
+  const now = Date.now();
+  const cached = priceCache.get(symbol);
+
+  // Return cached price if it exists and is less than 1 minute old
+  if (cached && now - cached.timestamp < CACHE_DURATION) {
+    console.log(`Using cached price for ${symbol}: $${cached.price}`);
+    return { c: cached.price };
+  }
+
   try {
     const url = `${BASE_URL}/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
     const response = await axios.get(url);
+
+    const currentPrice = response.data.c;
+
+    // Store in cache
+    priceCache.set(symbol, {
+      price: currentPrice,
+      timestamp: now,
+    });
+
+    console.log(`Fetched fresh price for ${symbol}: $${currentPrice}`);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    // If rate limited (429) and we have old cache, return it anyway
+    if (error.response?.status === 429 && cached) {
+      console.log(
+        `Rate limited. Using stale cache for ${symbol}: $${cached.price}`
+      );
+      return { c: cached.price };
+    }
+
     console.error(`Error fetching quote for ${symbol} from Finnhub:`, error);
     throw new Error("Failed to fetch quote from provider.");
   }
+};
+
+// Optional: Function to clear cache if needed
+export const clearPriceCache = () => {
+  priceCache.clear();
+  console.log("Price cache cleared");
 };

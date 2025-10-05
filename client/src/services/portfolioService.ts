@@ -29,6 +29,14 @@ export const addPortfolioInvestment = async (
   return response.data;
 };
 
+// New function to delete an investment
+export const deletePortfolioInvestment = async (id: number) => {
+  const response = await axios.delete(`${API_URL}/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return response.data;
+};
+
 // New function to get current prices for a symbol
 export const getCurrentPrice = async (symbol: string) => {
   try {
