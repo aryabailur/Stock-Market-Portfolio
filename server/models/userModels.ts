@@ -1,11 +1,11 @@
-import db from "./db-config.ts";
+import db from "../db_config.js";
 
 export async function createUser(user: {
   email: string;
   password_hash: string;
 }) {
   try {
-    const [newUser] = await db("login").insert(user).returning("*");
+    const [newUser] = await db("users").insert(user).returning("*");
     return newUser;
   } catch (dbError) {
     console.log("db insertion error", dbError);
@@ -15,7 +15,7 @@ export async function createUser(user: {
 
 export async function findUserByEmail(email: string) {
   try {
-    const userData = await db("login")
+    const userData = await db("users")
       .where("email", "=", email)
       .select("email", "password_hash")
       .first();

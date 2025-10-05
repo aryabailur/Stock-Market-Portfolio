@@ -1,10 +1,10 @@
-import db from "../db-config";
+import db from "../db_config";
 
 interface Investment {
   symbol: string;
   quantity: number;
   purchase_price: number;
-  user_id: number; // Or string, depending on your user ID type
+  user_id: number;
 }
 
 export const getInvestmentsByUserId = (userId: number) => {
