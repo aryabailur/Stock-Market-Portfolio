@@ -10,7 +10,7 @@ export const getStockCandles = async (
   to: number
 ) => {
   try {
-    const url = `${BASE_URL}/stock/candle?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}&token=${API_KEY}`;
+    const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`;
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
