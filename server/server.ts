@@ -10,7 +10,10 @@ const port = 5000;
 // --- MIDDLEWARE ---
 app.use(
   cors({
-    origin: ["https://stock-market-portfolio-ashy.vercel.app"],
+    origin: [
+      "https://stock-market-portfolio-ashy.vercel.app",
+      /https:\/\/stock-market-portfolio-.*\.vercel\.app$/,
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

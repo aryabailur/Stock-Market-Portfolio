@@ -7,7 +7,10 @@ const app = express();
 const port = 5000;
 // --- MIDDLEWARE ---
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"], // Common frontend dev ports
+    origin: [
+        "https://stock-market-portfolio-ashy.vercel.app",
+        /https:\/\/stock-market-portfolio-.*\.vercel\.app$/,
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
