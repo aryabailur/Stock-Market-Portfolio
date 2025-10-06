@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
-const API_URL = "/api/portfolio";
+const API_URL = `${API_BASE_URL}/api/portfolio`;
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

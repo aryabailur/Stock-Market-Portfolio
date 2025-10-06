@@ -6,7 +6,12 @@ import stockRouter from "./routes/stockRoutes.js";
 const app = express();
 const port = 5000;
 // --- MIDDLEWARE ---
-app.use(cors()); // <-- 2. Use cors middleware BEFORE your routes
+app.use(cors({
+    origin: ["https://stock-market-portfolio-ashy.vercel.app"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 // --- ROUTES ---
 app.use("/api/auth", authRouter);

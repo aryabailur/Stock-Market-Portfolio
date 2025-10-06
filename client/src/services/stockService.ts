@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
-const API_URL = "http://localhost:5000/api/stocks";
+const API_URL = `${API_BASE_URL}/api/stocks`;
 
 export const getStockHistory = async (symbol: string) => {
   const token = localStorage.getItem("token");
