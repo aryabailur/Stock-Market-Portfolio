@@ -15,7 +15,7 @@
     "pg": "^8.16.3"
   },
   "scripts": {
-    "build": "tsc --watch",
+    "build": "tsc",
     "dev": "nodemon dist/server.js"
   },
   "devDependencies": {
