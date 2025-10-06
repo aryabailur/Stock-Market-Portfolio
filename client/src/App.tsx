@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./Pages/LoginPage";
 import RegisterPage from "./Pages/RegisterPage";
 import DashboardPage from "./Pages/DashboardPage";
-import HomePage from "./Pages/HomePage";
+import HomePage from "./Pages/Homepage";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import "./App.css";
 
@@ -19,7 +19,7 @@ const App: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        
+
         {/* // Protected Routes 
           These routes are nested inside the ProtectedRoute component, 
           which handles authentication checks (e.g., redirecting unauthenticated users).
@@ -31,6 +31,6 @@ const App: React.FC = () => {
       </Routes>
     </BrowserRouter>
   );
-}
+};
 
 export default App;
