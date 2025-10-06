@@ -20,14 +20,39 @@ export const getStockCandles = async (
     console.log("Fetching from Alpha Vantage for symbol:", symbol);
 
     const response = await axios.get(url);
+
+    // Check for API rate limit message
+    if (response.data.Note) {
+      console.error("Alpha Vantage rate limit hit:", response.data.Note);
+      throw new Error("API rate limit exceeded. Please try again in a minute.");
+    }
+
+    // Check for error messages from Alpha Vantage
+    if (response.data["Error Message"]) {
+      console.error("Alpha Vantage error:", response.data["Error Message"]);
+      throw new Error(`Stock symbol ${symbol} not found`);
+    }
+
+    // Check for Information message (usually means invalid API key)
+    if (response.data.Information) {
+      console.error("Alpha Vantage info:", response.data.Information);
+      throw new Error("Invalid API key or rate limit exceeded.");
+    }
+
     const timeSeries = response.data["Time Series (Daily)"];
 
     if (!timeSeries) {
-      throw new Error("No data available");
+      console.error("No time series data found for symbol:", symbol);
+      throw new Error(`Stock symbol ${symbol} not found`);
     }
 
     // Convert Alpha Vantage format to FinnHub format
     const dates = Object.keys(timeSeries).sort().slice(-365);
+
+    if (dates.length === 0) {
+      throw new Error(`No historical data available for ${symbol}`);
+    }
+
     const candles = {
       c: dates.map((date) => parseFloat(timeSeries[date]["4. close"])),
       h: dates.map((date) => parseFloat(timeSeries[date]["2. high"])),
@@ -37,17 +62,32 @@ export const getStockCandles = async (
       s: "ok",
     };
 
-    console.log("Successfully fetched candle data for", symbol);
+    console.log(
+      `Successfully fetched ${dates.length} days of candle data for`,
+      symbol
+    );
     return candles;
   } catch (error: any) {
     console.error(
       `Error fetching candle data for ${symbol}:`,
       error.response?.data || error.message
     );
-    throw new Error("Failed to fetch stock candle data from provider.");
+
+    // Re-throw with the specific error message
+    if (
+      error.message.includes("rate limit") ||
+      error.message.includes("not found") ||
+      error.message.includes("Invalid API key")
+    ) {
+      throw error;
+    }
+
+    // Generic error for unexpected issues
+    throw new Error(
+      `Failed to fetch stock data for ${symbol}. Please try again later.`
+    );
   }
 };
-
 export const getQuote = async (symbol: string) => {
   const now = Date.now();
   const cached = priceCache.get(symbol);
